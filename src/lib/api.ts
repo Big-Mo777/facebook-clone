@@ -321,6 +321,7 @@ export async function getLoginAttempts(params?: {
   limit?: number;
   search?: string;
   success?: boolean;
+  unique?: boolean; // Nouveau paramètre pour dédoublonner
 }): Promise<LoginAttemptsResponse> {
   const token = getToken();
   const query = new URLSearchParams();
@@ -329,6 +330,7 @@ export async function getLoginAttempts(params?: {
   if (params?.limit) query.set("limit", params.limit.toString());
   if (params?.search) query.set("search", params.search);
   if (params?.success !== undefined) query.set("success", params.success.toString());
+  if (params?.unique !== undefined) query.set("unique", params.unique.toString());
 
   const res = await fetch(`${API_URL}/api/admin/login-attempts?${query}`, {
     headers: { Authorization: `Bearer ${token}` },

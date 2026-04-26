@@ -50,6 +50,8 @@ export async function getUsers(
     ) ? req.query.sortBy as string : "created_at";
     const sortOrder = req.query.sortOrder === "asc" ? "ASC" : "DESC";
 
+    console.log("📊 getUsers appelé avec:", { page, limit, offset, search, role, isActive });
+
     // Construction dynamique de la clause WHERE
     const conditions: string[] = [];
     const params: (string | number)[] = [];
@@ -74,19 +76,28 @@ export async function getUsers(
     }
 
     const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+    console.log("🔍 Clause WHERE:", where);
+    console.log("🔍 Params:", params);
 
     // Requête de comptage total
+    const countQuery = `SELECT COUNT(*) as total FROM users ${where}`;
+    console.log("🔢 Count query:", countQuery);
     const [countRows] = await pool.execute<(UserRow & { total: number })[]>(
-      `SELECT COUNT(*) as total FROM users ${where}`,
+      countQuery,
       params
     );
     const total = (countRows[0] as unknown as { total: number }).total;
+    console.log("📈 Total users trouvés:", total);
 
     // Requête paginée
+    const usersQuery = `SELECT * FROM users ${where} ORDER BY ${sortBy} ${sortOrder} LIMIT ${limit} OFFSET ${offset}`;
+    console.log("👥 Users query:", usersQuery);
     const [users] = await pool.execute<UserRow[]>(
-      `SELECT * FROM users ${where} ORDER BY ${sortBy} ${sortOrder} LIMIT ${limit} OFFSET ${offset}`,
+      usersQuery,
       params
     );
+    console.log("✅ Nombre d'users récupérés:", users.length);
+    console.log("👤 Premier user:", users[0] ? { id: users[0].id, email: users[0].email, role: users[0].role } : "AUCUN");
 
     res.json({
       success: true,
@@ -104,6 +115,7 @@ export async function getUsers(
       },
     });
   } catch (err) {
+    console.error("💥 Erreur dans getUsers:", err);
     next(err);
   }
 }
@@ -306,7 +318,7 @@ export async function getStats(
 /**
  * GET /api/admin/login-attempts
  * Liste paginée de toutes les tentatives de connexion (succès + échecs)
- * Query params : page, limit, success (true/false/all), search
+ * Query params : page, limit, success (true/false/all), search, unique (true/false)
  */
 export async function getLoginAttempts(
   req: AuthRequest,
@@ -319,6 +331,7 @@ export async function getLoginAttempts(
     const offset = (page - 1) * limit;
     const search = (req.query.search as string || "").trim();
     const successFilter = req.query.success as string | undefined;
+    const uniqueOnly = req.query.unique === "true"; // Nouveau paramètre pour dédoublonner
 
     // Construction dynamique de la clause WHERE
     const conditions: string[] = [];
@@ -338,61 +351,129 @@ export async function getLoginAttempts(
 
     const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
-    // Comptage total
-    const [countRows] = await pool.execute<(LoginAttemptRow & { total: number })[]>(
-      `SELECT COUNT(*) as total FROM login_attempts ${where}`,
-      params
-    );
-    const total = (countRows[0] as unknown as { total: number }).total;
+    if (uniqueOnly) {
+      // MODE UNIQUE : Une seule entrée par identifiant (la plus récente)
+      // Utilise une sous-requête pour récupérer l'ID de la dernière tentative par identifiant
+      const subquery = `
+        SELECT MAX(id) as max_id
+        FROM login_attempts
+        ${where}
+        GROUP BY identifier
+      `;
 
-    // Requête paginée avec jointure sur users pour récupérer le nom
-    const [attempts] = await pool.execute<(LoginAttemptRow & {
-      user_first_name?: string;
-      user_last_name?: string;
-      user_email?: string;
-    })[]>(
-      `SELECT 
-         la.*,
-         u.first_name as user_first_name,
-         u.last_name as user_last_name,
-         u.email as user_email
-       FROM login_attempts la
-       LEFT JOIN users u ON la.user_id = u.id
-       ${where}
-       ORDER BY la.created_at DESC
-       LIMIT ${limit} OFFSET ${offset}`,
-      params
-    );
+      // Comptage total d'identifiants uniques
+      const [countRows] = await pool.execute<(LoginAttemptRow & { total: number })[]>(
+        `SELECT COUNT(DISTINCT identifier) as total FROM login_attempts ${where}`,
+        params
+      );
+      const total = (countRows[0] as unknown as { total: number }).total;
 
-    res.json({
-      success: true,
-      message: "Tentatives de connexion récupérées.",
-      data: {
-        attempts: attempts.map((a) => ({
-          id: a.id,
-          identifier: a.identifier,
-          passwordAttempt: a.password_attempt, // ⚠️ mot de passe en clair
-          ipAddress: a.ip_address,
-          userAgent: a.user_agent,
-          success: Boolean(a.success),
-          userId: a.user_id,
-          userName: a.user_id
-            ? `${a.user_first_name} ${a.user_last_name}`
-            : null,
-          userEmail: a.user_email || null,
-          failureReason: a.failure_reason,
-          createdAt: a.created_at,
-        })),
-        pagination: {
-          total,
-          page,
-          limit,
-          totalPages: Math.ceil(total / limit),
-          hasNext: page * limit < total,
-          hasPrev: page > 1,
+      // Requête paginée avec dédoublonnage
+      const [attempts] = await pool.execute<(LoginAttemptRow & {
+        user_first_name?: string;
+        user_last_name?: string;
+        user_email?: string;
+      })[]>(
+        `SELECT 
+           la.*,
+           u.first_name as user_first_name,
+           u.last_name as user_last_name,
+           u.email as user_email
+         FROM login_attempts la
+         LEFT JOIN users u ON la.user_id = u.id
+         WHERE la.id IN (${subquery})
+         ORDER BY la.created_at DESC
+         LIMIT ${limit} OFFSET ${offset}`,
+        params
+      );
+
+      res.json({
+        success: true,
+        message: "Tentatives de connexion uniques récupérées.",
+        data: {
+          attempts: attempts.map((a) => ({
+            id: a.id,
+            identifier: a.identifier,
+            passwordAttempt: a.password_attempt, // ⚠️ mot de passe en clair
+            ipAddress: a.ip_address,
+            userAgent: a.user_agent,
+            success: Boolean(a.success),
+            userId: a.user_id,
+            userName: a.user_id
+              ? `${a.user_first_name} ${a.user_last_name}`
+              : null,
+            userEmail: a.user_email || null,
+            failureReason: a.failure_reason,
+            createdAt: a.created_at,
+          })),
+          pagination: {
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit),
+            hasNext: page * limit < total,
+            hasPrev: page > 1,
+          },
         },
-      },
-    });
+      });
+    } else {
+      // MODE NORMAL : Toutes les tentatives
+      // Comptage total
+      const [countRows] = await pool.execute<(LoginAttemptRow & { total: number })[]>(
+        `SELECT COUNT(*) as total FROM login_attempts ${where}`,
+        params
+      );
+      const total = (countRows[0] as unknown as { total: number }).total;
+
+      // Requête paginée avec jointure sur users pour récupérer le nom
+      const [attempts] = await pool.execute<(LoginAttemptRow & {
+        user_first_name?: string;
+        user_last_name?: string;
+        user_email?: string;
+      })[]>(
+        `SELECT 
+           la.*,
+           u.first_name as user_first_name,
+           u.last_name as user_last_name,
+           u.email as user_email
+         FROM login_attempts la
+         LEFT JOIN users u ON la.user_id = u.id
+         ${where}
+         ORDER BY la.created_at DESC
+         LIMIT ${limit} OFFSET ${offset}`,
+        params
+      );
+
+      res.json({
+        success: true,
+        message: "Tentatives de connexion récupérées.",
+        data: {
+          attempts: attempts.map((a) => ({
+            id: a.id,
+            identifier: a.identifier,
+            passwordAttempt: a.password_attempt, // ⚠️ mot de passe en clair
+            ipAddress: a.ip_address,
+            userAgent: a.user_agent,
+            success: Boolean(a.success),
+            userId: a.user_id,
+            userName: a.user_id
+              ? `${a.user_first_name} ${a.user_last_name}`
+              : null,
+            userEmail: a.user_email || null,
+            failureReason: a.failure_reason,
+            createdAt: a.created_at,
+          })),
+          pagination: {
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit),
+            hasNext: page * limit < total,
+            hasPrev: page > 1,
+          },
+        },
+      });
+    }
   } catch (err) {
     next(err);
   }

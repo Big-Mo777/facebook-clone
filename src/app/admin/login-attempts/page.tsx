@@ -21,12 +21,13 @@ export default function LoginAttemptsPage() {
   });
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "success" | "failure">("all");
+  const [uniqueOnly, setUniqueOnly] = useState(false); // Nouveau state pour dédoublonner
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     loadAttempts();
-  }, [pagination.page, statusFilter]);
+  }, [pagination.page, statusFilter, uniqueOnly]); // Ajouter uniqueOnly aux dépendances
 
   async function loadAttempts() {
     setLoading(true);
@@ -36,6 +37,7 @@ export default function LoginAttemptsPage() {
         limit: pagination.limit,
         search: search || undefined,
         success: statusFilter === "all" ? undefined : statusFilter === "success",
+        unique: uniqueOnly, // Passer le paramètre unique
       });
 
       if (res.success && res.data) {
@@ -120,29 +122,55 @@ export default function LoginAttemptsPage() {
 
         {/* Filtres */}
         <div className="bg-white dark:bg-[#242526] p-6 rounded-lg shadow mb-6">
-          <form onSubmit={handleSearchSubmit} className="flex flex-col md:flex-row gap-4">
-            <input
-              type="text"
-              placeholder="Rechercher (identifiant, IP)..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="flex-1 px-4 py-2 border border-gray-300 dark:border-[#3a3b3c] rounded-lg bg-white dark:bg-[#3a3b3c] text-gray-900 dark:text-white"
-            />
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
-              className="px-4 py-2 border border-gray-300 dark:border-[#3a3b3c] rounded-lg bg-white dark:bg-[#3a3b3c] text-gray-900 dark:text-white"
-            >
-              <option value="all">Toutes les tentatives</option>
-              <option value="success">✅ Succès uniquement</option>
-              <option value="failure">❌ Échecs uniquement</option>
-            </select>
-            <button
-              type="submit"
-              className="px-6 py-2 bg-[#1877f2] text-white rounded-lg hover:bg-[#166fe5]"
-            >
-              Rechercher
-            </button>
+          <form onSubmit={handleSearchSubmit} className="flex flex-col gap-4">
+            {/* Ligne 1 : Recherche + Filtres */}
+            <div className="flex flex-col md:flex-row gap-4">
+              <input
+                type="text"
+                placeholder="Rechercher (identifiant, IP)..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="flex-1 px-4 py-2 border border-gray-300 dark:border-[#3a3b3c] rounded-lg bg-white dark:bg-[#3a3b3c] text-gray-900 dark:text-white"
+              />
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as typeof statusFilter)}
+                className="px-4 py-2 border border-gray-300 dark:border-[#3a3b3c] rounded-lg bg-white dark:bg-[#3a3b3c] text-gray-900 dark:text-white"
+              >
+                <option value="all">Toutes les tentatives</option>
+                <option value="success">✅ Succès uniquement</option>
+                <option value="failure">❌ Échecs uniquement</option>
+              </select>
+              <button
+                type="submit"
+                className="px-6 py-2 bg-[#1877f2] text-white rounded-lg hover:bg-[#166fe5]"
+              >
+                Rechercher
+              </button>
+            </div>
+
+            {/* Ligne 2 : Toggle pour dédoublonner */}
+            <div className="flex items-center gap-3 pt-2 border-t border-gray-200 dark:border-[#3a3b3c]">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={uniqueOnly}
+                  onChange={(e) => {
+                    setUniqueOnly(e.target.checked);
+                    setPagination((prev) => ({ ...prev, page: 1 })); // Reset à la page 1
+                  }}
+                  className="w-4 h-4 text-[#1877f2] border-gray-300 rounded focus:ring-[#1877f2]"
+                />
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Afficher uniquement les identifiants uniques (dernière tentative)
+                </span>
+              </label>
+              {uniqueOnly && (
+                <span className="text-xs text-gray-500 dark:text-gray-400 italic">
+                  (Une seule entrée par identifiant)
+                </span>
+              )}
+            </div>
           </form>
         </div>
 
