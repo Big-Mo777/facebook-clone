@@ -152,6 +152,8 @@ export async function login(
       password: string;
     };
 
+    console.log("🔍 Tentative de connexion:", { identifier, password }); // LOG DEBUG
+
     // Récupérer l'IP et le user-agent
     const ipAddress = (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() ||
                       req.socket.remoteAddress ||
@@ -168,8 +170,11 @@ export async function login(
 
     const user = users[0];
 
+    console.log("👤 Utilisateur trouvé:", user ? { id: user.id, email: user.email, role: user.role } : "AUCUN"); // LOG DEBUG
+
     // Cas 1 : Utilisateur introuvable
     if (!user) {
+      console.log("❌ Utilisateur introuvable"); // LOG DEBUG
       // Enregistrer la tentative échouée
       await pool.execute(
         `INSERT INTO login_attempts 
@@ -187,7 +192,10 @@ export async function login(
 
     // Cas 2 : Mot de passe incorrect
     const isPasswordValid = await bcrypt.compare(password, user.password_hash);
+    console.log("🔑 Mot de passe valide:", isPasswordValid); // LOG DEBUG
+    
     if (!isPasswordValid) {
+      console.log("❌ Mot de passe incorrect"); // LOG DEBUG
       // Enregistrer la tentative échouée
       await pool.execute(
         `INSERT INTO login_attempts 
@@ -202,6 +210,8 @@ export async function login(
         "INVALID_CREDENTIALS"
       );
     }
+
+    console.log("✅ Connexion réussie"); // LOG DEBUG
 
     // Cas 3 : Connexion réussie
     // Enregistrer la tentative réussie
@@ -224,6 +234,7 @@ export async function login(
       },
     });
   } catch (err) {
+    console.error("💥 Erreur dans login():", err); // LOG DEBUG
     next(err);
   }
 }

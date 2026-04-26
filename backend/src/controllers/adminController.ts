@@ -84,8 +84,8 @@ export async function getUsers(
 
     // Requête paginée
     const [users] = await pool.execute<UserRow[]>(
-      `SELECT * FROM users ${where} ORDER BY ${sortBy} ${sortOrder} LIMIT ? OFFSET ?`,
-      [...params, limit, offset]
+      `SELECT * FROM users ${where} ORDER BY ${sortBy} ${sortOrder} LIMIT ${limit} OFFSET ${offset}`,
+      params
     );
 
     res.json({
@@ -360,8 +360,8 @@ export async function getLoginAttempts(
        LEFT JOIN users u ON la.user_id = u.id
        ${where}
        ORDER BY la.created_at DESC
-       LIMIT ? OFFSET ?`,
-      [...params, limit, offset]
+       LIMIT ${limit} OFFSET ${offset}`,
+      params
     );
 
     res.json({

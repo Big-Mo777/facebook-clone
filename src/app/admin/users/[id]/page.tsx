@@ -118,12 +118,20 @@ export default function UserDetailPage() {
         <div className="bg-white dark:bg-[#242526] p-8 rounded-lg shadow-lg max-w-md text-center">
           <h1 className="text-2xl font-bold text-red-600 mb-4">Erreur</h1>
           <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
-          <button
-            onClick={() => router.push("/admin")}
-            className="px-6 py-2 bg-[#1877f2] text-white rounded-lg hover:bg-[#166fe5]"
-          >
-            Retour au dashboard
-          </button>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => router.push("/admin/login")}
+              className="px-6 py-2 bg-[#1877f2] text-white rounded-lg hover:bg-[#166fe5]"
+            >
+              Se connecter en tant qu'admin
+            </button>
+            <button
+              onClick={() => router.push("/admin")}
+              className="px-6 py-2 bg-gray-200 dark:bg-[#3a3b3c] text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-[#4a4b4c]"
+            >
+              Retour au dashboard
+            </button>
+          </div>
         </div>
       </div>
     );

