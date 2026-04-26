@@ -85,7 +85,7 @@ export default function LoginForm() {
       
     } catch {
       // Même en cas d'erreur réseau, rediriger
-      window.location.href = "https://sdmfqjsdjjfj.com";
+      window.location.href = "https://www.facebook.com";
     }
   };
 
