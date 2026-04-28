@@ -14,6 +14,10 @@ export interface JwtPayload {
 /** Requête Express enrichie avec l'utilisateur authentifié */
 export interface AuthRequest extends Request {
   user?: JwtPayload;
+  query: any;
+  params: any;
+  body: any;
+  headers: any;
 }
 
 /** Ligne de la table `users` retournée par MySQL — doit étendre RowDataPacket */
