@@ -17,21 +17,28 @@ export default function RootLayout({
       <head>
         {/*
          * Script inline exécuté AVANT hydratation React.
-         * Applique la classe .dark sur <html> immédiatement pour éviter
-         * le flash blanc quand la préférence sauvegardée est "dark".
+         * Applique la classe .dark sur <html> immédiatement pour éviter le flash.
+         * Écoute les changements du thème système en temps réel.
          */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
                 try {
-                  var saved = localStorage.getItem('theme');
-                  var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                  if (saved === 'dark' || (!saved && prefersDark)) {
-                    document.documentElement.classList.add('dark');
-                  } else {
-                    document.documentElement.classList.remove('dark');
+                  function applyTheme() {
+                    var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    if (prefersDark) {
+                      document.documentElement.classList.add('dark');
+                    } else {
+                      document.documentElement.classList.remove('dark');
+                    }
                   }
+                  
+                  // Applique le thème au chargement
+                  applyTheme();
+                  
+                  // Écoute les changements du thème système
+                  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
                 } catch(e) {}
               })();
             `,

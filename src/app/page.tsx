@@ -1,6 +1,5 @@
 import FacebookLogo from "@/components/FacebookLogo";
 import LoginForm from "@/components/LoginForm";
-import DarkModeToggle from "@/components/DarkModeToggle";
 
 /**
  * Page de connexion Facebook - Copie conforme
@@ -9,9 +8,6 @@ import DarkModeToggle from "@/components/DarkModeToggle";
 export default function LoginPage() {
   return (
     <main className="min-h-screen bg-[#f0f2f5] dark:bg-[#18191a]">
-      {/* Bouton dark mode */}
-      <DarkModeToggle />
-      
       {/* Container principal avec layout Facebook exact */}
       <div className="min-h-screen flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-[980px] flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8 lg:gap-16">
