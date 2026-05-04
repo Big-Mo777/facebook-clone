@@ -24,7 +24,7 @@ export async function getPool(): Promise<mysql.Pool> {
     timezone: "+00:00",
     charset: "utf8mb4",
     enableKeepAlive: true,
-    keepAliveInitialDelayMs: 0,
+    keepAliveInitialDelay: 0,
   });
 
   return pool;
