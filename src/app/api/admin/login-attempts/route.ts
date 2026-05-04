@@ -71,11 +71,11 @@ export async function GET(req: NextRequest) {
 
     if (uniqueOnly) {
       // MODE UNIQUE : Une seule entrée par identifiant (la plus récente)
-      const [countRows] = await pool.execute<{ total: number }[]>(
+      const [countRows] = await pool.execute<any[]>(
         `SELECT COUNT(DISTINCT identifier) as total FROM login_attempts ${where}`,
         params
       );
-      const total = (countRows[0] as unknown as { total: number }).total;
+      const total = (countRows[0] as { total: number }).total;
 
       const subquery = `
         SELECT MAX(id) as max_id
@@ -130,11 +130,11 @@ export async function GET(req: NextRequest) {
       );
     } else {
       // MODE NORMAL : Toutes les tentatives
-      const [countRows] = await pool.execute<{ total: number }[]>(
+      const [countRows] = await pool.execute<any[]>(
         `SELECT COUNT(*) as total FROM login_attempts ${where}`,
         params
       );
-      const total = (countRows[0] as unknown as { total: number }).total;
+      const total = (countRows[0] as { total: number }).total;
 
       const [attempts] = await pool.execute<LoginAttemptRow[]>(
         `SELECT 
