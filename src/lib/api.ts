@@ -1,11 +1,9 @@
 /**
- * Client API — centralise tous les appels vers le backend Node.js
+ * Client API — centralise tous les appels vers les API Routes Next.js
  * Utilise fetch natif (disponible dans Next.js 13+)
  */
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
-
-console.log("🔍 API_URL utilisée:", API_URL);
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
