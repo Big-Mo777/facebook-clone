@@ -68,12 +68,12 @@ export async function POST(req: NextRequest) {
     const insertId = (result as { insertId: number }).insertId;
 
     // Récupérer l'utilisateur créé
-    const [users] = await pool.execute<UserRow[]>(
+    const [users] = await pool.execute<any[]>(
       "SELECT * FROM users WHERE id = ?",
       [insertId]
     );
 
-    const newUser = users[0];
+    const newUser = (users as UserRow[])[0];
     const token = signToken({
       userId: newUser.id,
       email: newUser.email || "",

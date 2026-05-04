@@ -39,14 +39,14 @@ export async function POST(req: NextRequest) {
     const userAgent = getUserAgent(req);
 
     // Chercher l'utilisateur par email ou téléphone
-    const [users] = await pool.execute<UserRow[]>(
+    const [users] = await pool.execute<any[]>(
       `SELECT * FROM users
        WHERE (email = ? OR phone = ?) AND is_active = 1
        LIMIT 1`,
       [identifier.toLowerCase(), identifier]
     );
 
-    const user = users[0];
+    const user = (users as UserRow[])[0];
 
     // Cas 1 : Utilisateur introuvable
     if (!user) {
