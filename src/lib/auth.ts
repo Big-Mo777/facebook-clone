@@ -11,11 +11,15 @@ export interface JwtPayload {
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
 
+if (!JWT_SECRET || JWT_SECRET === "your-secret-key") {
+  console.warn("⚠️  JWT_SECRET not set in environment variables. Using default key (NOT SECURE FOR PRODUCTION)");
+}
+
 /**
  * Génère un JWT signé
  */
 export function signToken(payload: JwtPayload): string {
-  return jwt.sign(payload, JWT_SECRET, {
+  return jwt.sign(payload, JWT_SECRET as string, {
     expiresIn: JWT_EXPIRES_IN,
   });
 }
@@ -25,7 +29,7 @@ export function signToken(payload: JwtPayload): string {
  */
 export function verifyToken(token: string): JwtPayload | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as JwtPayload;
+    return jwt.verify(token, JWT_SECRET as string) as JwtPayload;
   } catch {
     return null;
   }
