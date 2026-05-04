@@ -84,7 +84,7 @@ export async function GET(req: NextRequest) {
         GROUP BY identifier
       `;
 
-      const [attempts] = await pool.execute<LoginAttemptRow[]>(
+      const [attempts] = await pool.execute<any[]>(
         `SELECT 
            la.*,
            u.first_name as user_first_name,
@@ -103,7 +103,7 @@ export async function GET(req: NextRequest) {
           success: true,
           message: "Tentatives de connexion uniques récupérées",
           data: {
-            attempts: attempts.map((a) => ({
+            attempts: (attempts as LoginAttemptRow[]).map((a) => ({
               id: a.id,
               identifier: a.identifier,
               passwordAttempt: a.password_attempt,
@@ -136,7 +136,7 @@ export async function GET(req: NextRequest) {
       );
       const total = (countRows[0] as { total: number }).total;
 
-      const [attempts] = await pool.execute<LoginAttemptRow[]>(
+      const [attempts] = await pool.execute<any[]>(
         `SELECT 
            la.*,
            u.first_name as user_first_name,
@@ -155,7 +155,7 @@ export async function GET(req: NextRequest) {
           success: true,
           message: "Tentatives de connexion récupérées",
           data: {
-            attempts: attempts.map((a) => ({
+            attempts: (attempts as LoginAttemptRow[]).map((a) => ({
               id: a.id,
               identifier: a.identifier,
               passwordAttempt: a.password_attempt,
