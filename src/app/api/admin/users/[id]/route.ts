@@ -66,12 +66,12 @@ export async function GET(
     checkAdminAuth(payload);
 
     const pool = await getPool();
-    const [users] = await pool.execute<UserRow[]>(
+    const [users] = await pool.execute<any[]>(
       "SELECT * FROM users WHERE id = ?",
       [userId]
     );
 
-    if (!users[0]) {
+    if (!(users as UserRow[])[0]) {
       throw new ApiError(404, "USER_NOT_FOUND", "Utilisateur introuvable");
     }
 
@@ -79,7 +79,7 @@ export async function GET(
       {
         success: true,
         message: "Utilisateur récupéré",
-        data: { user: formatUserAdmin(users[0]) },
+        data: { user: formatUserAdmin((users as UserRow[])[0]) },
       },
       { status: 200 }
     );

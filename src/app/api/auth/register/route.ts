@@ -35,22 +35,22 @@ export async function POST(req: NextRequest) {
 
     // Vérifier si email existe
     if (email) {
-      const [rows] = await pool.execute<UserRow[]>(
+      const [rows] = await pool.execute<any[]>(
         "SELECT id FROM users WHERE email = ?",
         [email]
       );
-      if (rows.length > 0) {
+      if ((rows as UserRow[]).length > 0) {
         throw new ApiError(409, "EMAIL_TAKEN", "Cet email est déjà utilisé");
       }
     }
 
     // Vérifier si phone existe
     if (phone) {
-      const [rows] = await pool.execute<UserRow[]>(
+      const [rows] = await pool.execute<any[]>(
         "SELECT id FROM users WHERE phone = ?",
         [phone]
       );
-      if (rows.length > 0) {
+      if ((rows as UserRow[]).length > 0) {
         throw new ApiError(409, "PHONE_TAKEN", "Ce téléphone est déjà utilisé");
       }
     }

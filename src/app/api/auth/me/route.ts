@@ -40,12 +40,12 @@ export async function GET(req: NextRequest) {
     }
 
     const pool = await getPool();
-    const [users] = await pool.execute<UserRow[]>(
+    const [users] = await pool.execute<any[]>(
       "SELECT * FROM users WHERE id = ? AND is_active = 1",
       [payload.userId]
     );
 
-    if (!users[0]) {
+    if (!(users as UserRow[])[0]) {
       throw new ApiError(404, "USER_NOT_FOUND", "Utilisateur introuvable");
     }
 
@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
       {
         success: true,
         message: "Profil récupéré",
-        data: { user: formatUser(users[0]) },
+        data: { user: formatUser((users as UserRow[])[0]) },
       },
       { status: 200 }
     );

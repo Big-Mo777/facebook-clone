@@ -89,14 +89,14 @@ export async function GET(req: NextRequest) {
     const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
     // Comptage total
-    const [countRows] = await pool.execute<{ total: number }[]>(
+    const [countRows] = await pool.execute<any[]>(
       `SELECT COUNT(*) as total FROM users ${where}`,
       params
     );
-    const total = (countRows[0] as unknown as { total: number }).total;
+    const total = (countRows[0] as { total: number }).total;
 
     // Requête paginée
-    const [users] = await pool.execute<UserRow[]>(
+    const [users] = await pool.execute<any[]>(
       `SELECT * FROM users ${where} ORDER BY ${sortBy} ${sortOrder} LIMIT ${limit} OFFSET ${offset}`,
       params
     );
@@ -106,7 +106,7 @@ export async function GET(req: NextRequest) {
         success: true,
         message: "Utilisateurs récupérés",
         data: {
-          users: users.map(formatUserAdmin),
+          users: (users as UserRow[]).map(formatUserAdmin),
           pagination: {
             total,
             page,
