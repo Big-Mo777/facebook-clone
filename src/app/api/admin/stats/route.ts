@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
     checkAdminAuth(payload);
 
     const pool = await getPool();
-    const [rows] = await pool.execute<Record<string, number>[]>(`
+    const [rows] = await pool.execute<any[]>(`
       SELECT
         COUNT(*)                                    AS total,
         SUM(is_active = 1)                          AS active,
@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
       FROM users
     `);
 
-    const s = rows[0] || {};
+    const s = (rows[0] || {}) as Record<string, number>;
 
     return NextResponse.json(
       {
