@@ -3,7 +3,7 @@
  * Utilise fetch natif (disponible dans Next.js 13+)
  */
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://network-bigmoapp-mauve.vercel.app";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://network-bigmoapp-free.vercel.app";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
