@@ -19,9 +19,9 @@ if (!JWT_SECRET || JWT_SECRET === "your-secret-key") {
  * Génère un JWT signé
  */
 export function signToken(payload: JwtPayload): string {
-  return jwt.sign(payload, JWT_SECRET as string, {
+  return jwt.sign(payload, JWT_SECRET as jwt.Secret, {
     expiresIn: JWT_EXPIRES_IN,
-  });
+  } as jwt.SignOptions);
 }
 
 /**
@@ -29,7 +29,7 @@ export function signToken(payload: JwtPayload): string {
  */
 export function verifyToken(token: string): JwtPayload | null {
   try {
-    return jwt.verify(token, JWT_SECRET as string) as JwtPayload;
+    return jwt.verify(token, JWT_SECRET as jwt.Secret) as JwtPayload;
   } catch {
     return null;
   }
